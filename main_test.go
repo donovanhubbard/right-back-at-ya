@@ -1,0 +1,95 @@
+package main
+
+import (
+	"fmt"
+	"io"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+)
+
+func makeRequest(method, path string) *http.Response {
+	req := httptest.NewRequest(method, path, nil)
+	w := httptest.NewRecorder()
+	rbay(w, req)
+	return w.Result()
+}
+
+func suppressLogOutput() func() {
+	defaultLogger := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+	return func() {
+		slog.SetDefault(defaultLogger)
+	}
+}
+func TestRootReturns200(t *testing.T) {
+	restoreLog := suppressLogOutput()
+	defer restoreLog()
+	res := makeRequest(http.MethodGet, "/")
+	expected := 200
+	if res.StatusCode != expected {
+		t.Fatal(fmt.Sprintf("Expected status of %d got %d", expected, res.StatusCode))
+	}
+}
+
+func TestRootReturnsGetMethod(t *testing.T) {
+	res := makeRequest(http.MethodGet, "/")
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf("expected error to be nil got %v", err)
+	}
+	expected := "Method: GET"
+	if !strings.Contains(string(data), expected) {
+		t.Fatal(fmt.Sprintf("Expected field '%s' but it was not found in the response", expected))
+	}
+}
+
+func TestRootReturnsPostMethod(t *testing.T) {
+	res := makeRequest(http.MethodPost, "/")
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf("expected error to be nil got %v", err)
+	}
+	expected := "Method: POST"
+	if !strings.Contains(string(data), expected) {
+		t.Fatal(fmt.Sprintf("Expected field '%s' but it was not found in the response", expected))
+	}
+}
+
+func TestRootReturnsPath(t *testing.T) {
+	res := makeRequest(http.MethodPost, "/foo")
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf("expected error to be nil got %v", err)
+	}
+	expected := "URL: /foo"
+	if !strings.Contains(string(data), expected) {
+		t.Fatal(fmt.Sprintf("Expected field '%s' but it was not found in the response", expected))
+	}
+}
+
+func TestHeader(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Add("foo", "bar")
+	w := httptest.NewRecorder()
+	rbay(w, req)
+	res := w.Result()
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf("expected error to be nil got %v", err)
+	}
+	expected := "Headers:"
+	if !strings.Contains(string(data), expected) {
+		t.Fatal(fmt.Sprintf("Expected field '%s' but it was not found in the response", expected))
+	}
+	expected = "Foo: [bar]"
+	if !strings.Contains(string(data), expected) {
+		t.Fatal(fmt.Sprintf("Expected field '%s' but it was not found in the response", expected))
+	}
+}
