@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -74,8 +75,13 @@ func rbay(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	fmt.Println("Server started.")
+	port, portSet := os.LookupEnv("PORT")
+	if !portSet {
+		port = "8080"
+	}
+
+	fmt.Printf("Server started on port %s\n", port)
 	http.HandleFunc("/", rbay)
-	err := http.ListenAndServe(":8085", nil)
+	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", port), nil)
 	slog.Error(fmt.Sprintf("%v", err))
 }
