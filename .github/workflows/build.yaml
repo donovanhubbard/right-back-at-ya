@@ -69,5 +69,5 @@ jobs:
             donovanhubbard/right-back-at-ya:latest \
             --amend donovanhubbard/right-back-at-ya:latest-amd64 \
             --amend donovanhubbard/right-back-at-ya:latest-arm64
-          docker manifest push donovanhubbard/right-back-at-ya:latst
+          docker manifest push donovanhubbard/right-back-at-ya:latest
 
