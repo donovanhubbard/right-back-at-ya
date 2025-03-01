@@ -1,6 +1,9 @@
 # right-back-at-ya
 A diagnostic HTTP server that writes everything about the request in the response
 
+
+# Default route
+
 Example output:
 
 ```
@@ -33,6 +36,7 @@ Headers:
   Accept: [*/*]
 HTTP Status code: 200
 ```
+# Status Codes
 
 Requesting a path between `/1` to `/599` will return a request of
 that status code. All other paths return a status code of `200`
@@ -53,4 +57,17 @@ HTTP Status code: 500
 
 By default rbay listens on port 8080 but that can be changed
 with the environment variable `PORT`.
+
+# Custom Message
+
+Requesting the route `/message` will return string equal to the value of the 
+`MESSAGE` environment variable. If this variable isn't set, a default value
+is used.
+
+```
+curl http://localhost:8080/message
+
+Crab your dog after you pet 
+```
+
 

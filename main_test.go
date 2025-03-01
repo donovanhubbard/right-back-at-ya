@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -91,5 +92,38 @@ func TestHeader(t *testing.T) {
 	expected = "Foo: [bar]"
 	if !strings.Contains(string(data), expected) {
 		t.Fatal(fmt.Sprintf("Expected field '%s' but it was not found in the response", expected))
+	}
+}
+
+func TestDefaultMessage(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/message", nil)
+	w := httptest.NewRecorder()
+	os.Unsetenv("MESSAGE")
+	message(w, req)
+	res := w.Result()
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf("expected error to be nil got %v", err)
+	}
+	if string(data) != DEFAULT_MESSAGE {
+		t.Errorf("Expected message '%s' but got '%s'\n", DEFAULT_MESSAGE, data)
+	}
+}
+
+func TestCustomMessage(t *testing.T) {
+	customMessage := "foo bar"
+	req := httptest.NewRequest(http.MethodGet, "/message", nil)
+	w := httptest.NewRecorder()
+	os.Setenv("MESSAGE", customMessage)
+	message(w, req)
+	res := w.Result()
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Errorf("expected error to be nil got %v", err)
+	}
+	if string(data) != customMessage {
+		t.Errorf("Expected message '%s' but got '%s'\n", customMessage, data)
 	}
 }

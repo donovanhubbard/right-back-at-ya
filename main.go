@@ -11,6 +11,8 @@ import (
 	"strings"
 )
 
+const DEFAULT_MESSAGE = "Crab your dog after you pet"
+
 func getStatusCode(url string) (int, error) {
 	trimmedUrl := strings.TrimPrefix(url, "/")
 	status, err := strconv.Atoi(trimmedUrl)
@@ -74,6 +76,15 @@ func rbay(w http.ResponseWriter, r *http.Request) {
 	slog.Info(fmt.Sprintf("%s %d %s %s", r.RemoteAddr, returnCode, r.Method, r.URL))
 }
 
+func message(w http.ResponseWriter, r *http.Request) {
+	message, messageSet := os.LookupEnv("MESSAGE")
+	if !messageSet {
+		message = DEFAULT_MESSAGE
+	}
+	fmt.Fprintf(w, "%s", message)
+	slog.Info(fmt.Sprintf("%s %d %s %s", r.RemoteAddr, 200, r.Method, r.URL))
+}
+
 func main() {
 	port, portSet := os.LookupEnv("PORT")
 	if !portSet {
@@ -82,6 +93,7 @@ func main() {
 
 	fmt.Printf("Server started on port %s\n", port)
 	http.HandleFunc("/", rbay)
+	http.HandleFunc("/message", message)
 	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", port), nil)
 	slog.Error(fmt.Sprintf("%v", err))
 }
