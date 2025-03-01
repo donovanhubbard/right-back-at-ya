@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"log/slog"
 	"net/http"
@@ -89,6 +90,30 @@ func message(w http.ResponseWriter, r *http.Request) {
 	slog.Info(fmt.Sprintf("%s %d %s %s", r.RemoteAddr, 200, r.Method, r.URL))
 }
 
+func color(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/color.html")
+	if err != nil {
+		slog.Error(fmt.Sprintf("Failed to parse template 'templates/color.html'. %v", err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	color, colorSet := os.LookupEnv("COLOR")
+	if !colorSet {
+		color = "blue"
+	}
+	data := map[string]string{
+		"Color": color,
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		slog.Error(fmt.Sprintf("Failed to execute template 'templates/color.html'. %v", err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	slog.Info(fmt.Sprintf("%s %d %s %s", r.RemoteAddr, 200, r.Method, r.URL))
+}
+
 func main() {
 	port, portSet := os.LookupEnv("PORT")
 	if !portSet {
@@ -96,8 +121,9 @@ func main() {
 	}
 
 	fmt.Printf("Server started on port %s\n", port)
-	http.HandleFunc("/", rbay)
 	http.HandleFunc("/message", message)
+	http.HandleFunc("/color", color)
+	http.HandleFunc("/", rbay)
 	err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%s", port), nil)
 	slog.Error(fmt.Sprintf("%v", err))
 }

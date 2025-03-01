@@ -70,4 +70,7 @@ curl http://localhost:8080/message
 Crab your dog after you pet 
 ```
 
+# Color
 
+Visiting the `/color` route will return a page of the color set by the environment
+variable `COLOR`
