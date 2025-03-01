@@ -127,3 +127,13 @@ func TestCustomMessage(t *testing.T) {
 		t.Errorf("Expected message '%s' but got '%s'\n", customMessage, data)
 	}
 }
+
+func TestMessageWrongMethod(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/message", nil)
+	w := httptest.NewRecorder()
+	message(w, req)
+	res := w.Result()
+	if res.StatusCode != http.StatusMethodNotAllowed {
+		t.Errorf("Expected status code '%d' but got '%d'\n", http.StatusMethodNotAllowed, res.StatusCode)
+	}
+}

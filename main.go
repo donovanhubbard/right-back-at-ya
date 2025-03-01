@@ -77,6 +77,10 @@ func rbay(w http.ResponseWriter, r *http.Request) {
 }
 
 func message(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 	message, messageSet := os.LookupEnv("MESSAGE")
 	if !messageSet {
 		message = DEFAULT_MESSAGE
